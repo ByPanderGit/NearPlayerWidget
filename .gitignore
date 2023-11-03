@@ -1,0 +1,12 @@
+.classpath
+.project
+.settings/*
+.idea
+/bin/
+out
+.gradle
+*.iml
+build
+
+# Exclude run except natives
+run/*

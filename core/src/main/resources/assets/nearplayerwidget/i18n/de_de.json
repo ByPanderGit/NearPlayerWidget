@@ -1,0 +1,33 @@
+{
+  "nearplayerwidget": {
+    "settings": {
+      "name": "Near player widget",
+      "enabled": {
+        "name": "Enabled"
+      },
+      "format": {
+        "name": "Textzeilen Format"
+      },
+      "maxEntries": {
+        "name": "Anzahl der dargestellten Spieler"
+      },
+      "maxDecimals": {
+        "name": "Anzahl der Nachkommastellen"
+      },
+      "removeWithoutName": {
+        "name": "Entferne Spieler ohne Namen"
+      }
+
+    },
+    "hudWidget": {
+      "NearPlayerWidget" : {
+        "name": "Near player widget"
+      }
+    },
+    "custon": {
+      "noplayer": {
+        "name": "Es ist kein Spieler in der Nähe"
+      }
+    }
+  }
+}
