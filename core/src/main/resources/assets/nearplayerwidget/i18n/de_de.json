@@ -3,7 +3,7 @@
     "settings": {
       "name": "Near player widget",
       "enabled": {
-        "name": "Enabled"
+        "name": "Aktiviert"
       },
       "format": {
         "name": "Textzeilen Format"
@@ -14,8 +14,25 @@
       "maxDecimals": {
         "name": "Anzahl der Nachkommastellen"
       },
-      "removeWithoutName": {
-        "name": "Entferne Spieler ohne Namen"
+      "coloredDistance": {
+        "name": "Farbige Distanz"
+      },
+      "coloredDistanceText": {
+        "name": "Farb Format"
+      },
+      "removePlayer": {
+        "name": "Entferne Spieler"
+      },
+      "removePlayerText": {
+        "name": "Entfernungsfilter"
+      },
+      "header": {
+        "coloredDistanceSection": {
+          "name": "Farbige Distanz"
+        },
+        "removePlayerSection": {
+          "name": "Entferne Spieler"
+        }
       }
 
     },
@@ -24,7 +41,7 @@
         "name": "Near player widget"
       }
     },
-    "custon": {
+    "custom": {
       "noplayer": {
         "name": "Es ist kein Spieler in der Nähe"
       }

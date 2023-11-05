@@ -5,6 +5,8 @@ import net.labymod.api.client.gui.screen.widget.widgets.input.SliderWidget.Slide
 import net.labymod.api.client.gui.screen.widget.widgets.input.SwitchWidget.SwitchSetting;
 import net.labymod.api.client.gui.screen.widget.widgets.input.TextFieldWidget.TextFieldSetting;
 import net.labymod.api.configuration.loader.property.ConfigProperty;
+import net.labymod.api.configuration.settings.annotation.SettingSection;
+import net.labymod.api.util.MethodOrder;
 
 public class NearPlayerModuleConfig extends AddonConfig {
 
@@ -12,7 +14,7 @@ public class NearPlayerModuleConfig extends AddonConfig {
   private final ConfigProperty<Boolean> enabled = new ConfigProperty<>(true);
 
   @TextFieldSetting
-  private final ConfigProperty<String> format = new ConfigProperty<>("{name} | {distance}m");
+  private final ConfigProperty<String> format = new ConfigProperty<>("{name} {distance}m");
 
   @SliderSetting(steps = 1, min = 1, max = 25)
   private final ConfigProperty<Integer> maxEntries = new ConfigProperty<>(10);
@@ -20,8 +22,27 @@ public class NearPlayerModuleConfig extends AddonConfig {
   @SliderSetting(steps = 1, min = 0, max = 5)
   private final ConfigProperty<Integer> maxDecimals = new ConfigProperty<>(2);
 
+  @SettingSection("coloredDistanceSection")
   @SwitchSetting
-  private final ConfigProperty<Boolean> removeWithoutName = new ConfigProperty<>(true);
+  private final ConfigProperty<Boolean> coloredDistance = new ConfigProperty<>(true);
+
+  @TextFieldSetting
+  private final ConfigProperty<String> coloredDistanceText = new ConfigProperty<>("1024>&a;20>&6;10>&c");
+
+  @SettingSection("removePlayerSection")
+  @SwitchSetting
+  private final ConfigProperty<Boolean> removePlayer = new ConfigProperty<>(true);
+
+  @TextFieldSetting
+  private final ConfigProperty<String> removePlayerText = new ConfigProperty<>("Playername1;Playername2");
+
+  public ConfigProperty<Boolean> removePlayer() {
+    return removePlayer;
+  }
+
+  public ConfigProperty<String> removePlayerText() {
+    return removePlayerText;
+  }
 
   @Override
   public ConfigProperty<Boolean> enabled() {
@@ -32,15 +53,19 @@ public class NearPlayerModuleConfig extends AddonConfig {
     return  format;
   }
 
+  public ConfigProperty<Boolean> coloredDistance() {
+    return coloredDistance;
+  }
+
+  public ConfigProperty<String> coloredDistanceText() {
+    return coloredDistanceText;
+  }
+
   public ConfigProperty<Integer> maxEntries() {
     return maxEntries;
   }
 
   public ConfigProperty<Integer> maxDecimals() {
     return maxDecimals;
-  }
-
-  public ConfigProperty<Boolean> removeWithoutName() {
-    return removeWithoutName;
   }
 }

@@ -4,9 +4,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 import de.bypander.nearplayerwidget.NearPlayerModuleAddon;
 import de.bypander.nearplayerwidget.config.NearPlayerModuleConfig;
 import net.labymod.api.Laby;
+import net.labymod.api.addon.LabyAddon;
 import net.labymod.api.client.component.Component;
 import net.labymod.api.client.component.TextComponent;
 import net.labymod.api.client.entity.Entity;
@@ -14,7 +16,10 @@ import net.labymod.api.client.entity.player.Player;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextHudWidget;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextHudWidgetConfig;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextLine;
+import net.labymod.api.client.gui.icon.Icon;
 import net.labymod.api.client.network.NetworkPlayerInfo;
+import net.labymod.api.client.resources.ResourceLocation;
+import net.labymod.api.util.Color;
 import net.labymod.api.util.I18n;
 
 public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
@@ -26,6 +31,7 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
   public NearPlayerWidget(String id, NearPlayerModuleAddon addon) {
     super(id);
     this.config = addon.configuration();
+    this.setIcon(Icon.texture(ResourceLocation.create("nearplayerwidget", "textures/icon.png")).resolution(64,64));
   }
 
   @Override
@@ -43,7 +49,8 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     ArrayList<RenderedPlayer> playerList = orderedPlayerList();
 
     if (playerList.isEmpty()) {
-      return Component.newline().append(Component.text(I18n.translate("nearplayerwidget.custom.noplayer.name")));
+      return Component.newline()
+          .append(Component.text(" "+ I18n.translate("nearplayerwidget.custom.noplayer.name")));
     }
 
     int numberOfEntries = config.maxEntries().get();
@@ -52,7 +59,7 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
     for (int i = 0; i < Math.min(numberOfEntries, playerList.size()); i++) {
       RenderedPlayer rp = playerList.get(i);
-      String format = config.format().get();
+      String format = config.format().get().replaceAll("&[0-9a-f]", "§a$0");
       String[] parts = format.split("\\{");
 
       textComponent.append(Component.newline()).append(Component.text(" "));
@@ -69,11 +76,21 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
             case "name":
               textComponent.append(rp.name());
               break;
-            case "displayName":
+            case "displayname":
               textComponent.append(rp.displayName());
               break;
             case "distance":
-              textComponent.append(Component.text(df.format(Math.sqrt(rp.squaredDistance()))));
+              String distance = df.format(Math.sqrt(rp.squaredDistance()));
+              if (config.coloredDistance().get()) {
+                ArrayList<Colors> colors = colorsList();
+                for (Colors color : colors) {
+                  if (Math.sqrt(rp.squaredDistance()) < color.distance()) {
+                    distance = color.color() + distance + "§r";
+                    break;
+                  }
+                }
+              }
+              textComponent.append(Component.text(distance));
               break;
             default:
               textComponent.append(Component.text(placeholders[0]));
@@ -95,18 +112,20 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     Player clientplayer = Laby.labyAPI().minecraft().getClientPlayer();
     List<Entity> entities = Laby.labyAPI().minecraft().clientWorld().getEntities();
     ArrayList<RenderedPlayer> playerList = new ArrayList<>();
-
+    outer:
     for (Entity entity : entities) {
       if (entity instanceof Player) {
         assert clientplayer != null;
         if (!((Player) entity).getName().equals(clientplayer.getName())) {
-          Double squaredDistance = entity.getDistanceSquared(clientplayer);
-
-          TextComponent name = Component.text(((Player) entity).getName());
-          if (name.getText().trim().isEmpty() && config.removeWithoutName().get()) {
-            continue;
+          if (config.removePlayer().get()) {
+             for (String n : config.removePlayerText().get().split(";")) {
+               if (((Player) entity).getName().replaceAll("§", "").equals(n)) {
+                 continue outer;
+               }
+             }
           }
-
+          Double squaredDistance = entity.getDistanceSquared(clientplayer);
+          TextComponent name = Component.text(((Player) entity).getName());
           TextComponent displayName = Component.text(((Player) entity).getName());
           NetworkPlayerInfo npi = ((Player) entity).networkPlayerInfo();
           if (npi != null) {
@@ -132,7 +151,30 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     return new DecimalFormat("0");
   }
 
-  private record RenderedPlayer(TextComponent name, TextComponent displayName, Double squaredDistance) {
+  private ArrayList<Colors> colorsList() {
+    ArrayList<Colors> colors = new ArrayList<>();
+    String[] parts = config.coloredDistanceText().get().split(";");
+    for (String part : parts) {
+      String[] p = part.split(">");
+      if (p.length != 2 || !Pattern.compile("&[0-9a-f]").matcher(p[1]).matches()) {
+        continue;
+      }
+      try {
+        int d = Integer.parseInt(p[0]);
+        colors.add(new Colors(d, p[1].replace("&", "§")));
+      } catch (NumberFormatException ignored) {
+      }
+    }
+    colors.sort(Comparator.comparingDouble(Colors::distance));
+    return colors;
+  }
+
+  private record Colors(Integer distance, String color) {
+
+  }
+
+  private record RenderedPlayer(TextComponent name, TextComponent displayName,
+                                Double squaredDistance) {
 
   }
 }

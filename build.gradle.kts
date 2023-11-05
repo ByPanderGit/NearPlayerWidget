@@ -15,7 +15,7 @@ labyMod {
         namespace = "nearplayerwidget"
         displayName = "NearPlayerWidget"
         author = "ByPander"
-        description = "Adds a HUD widget that shows nearby player"
+        description = "Adds a widget that displays nearby players."
         minecraftVersion = "*"
         version = System.getenv().getOrDefault("VERSION", "1.0.0")
     }

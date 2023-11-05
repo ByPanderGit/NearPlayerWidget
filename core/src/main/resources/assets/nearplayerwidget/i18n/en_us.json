@@ -14,8 +14,25 @@
       "maxDecimals": {
         "name": "Number of Decimals"
       },
-      "removeWithoutName": {
-        "name": "Remove player without a name"
+      "coloredDistance": {
+        "name": "Colored Distance"
+      },
+      "coloredDistanceText": {
+        "name": "Color Format"
+      },
+      "removePlayer": {
+        "name": "Remove Player"
+      },
+      "removePlayerText": {
+        "name": "Remove filter"
+      },
+      "header": {
+        "coloredDistanceSection": {
+          "name": "Colored Distance"
+        },
+        "removePlayerSection": {
+          "name": "Remove Player"
+        }
       }
 
     },
