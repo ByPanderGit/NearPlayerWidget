@@ -37,7 +37,7 @@ public class NearPlayerModuleConfig extends AddonConfig {
   private final ConfigProperty<Boolean> removePlayer = new ConfigProperty<>(false);
 
   @TextFieldSetting
-  private final ConfigProperty<String> removePlayerText = new ConfigProperty<>("Name1;Name2:Name3");
+  private final ConfigProperty<String> removePlayerText = new ConfigProperty<>("Name1;Name2;Name3");
 
   public ConfigProperty<Boolean> removePlayer() {
     return removePlayer;
