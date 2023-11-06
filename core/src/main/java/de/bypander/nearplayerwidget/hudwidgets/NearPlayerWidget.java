@@ -59,7 +59,7 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
     for (int i = 0; i < Math.min(numberOfEntries, playerList.size()); i++) {
       RenderedPlayer rp = playerList.get(i);
-      String format = config.format().get().replaceAll("&[0-9a-f]", "§a$0");
+      String format = config.format().get().replaceAll("&([0-9a-f])", "§$1");
       String[] parts = format.split("\\{");
 
       textComponent.append(Component.newline()).append(Component.text(" "));
