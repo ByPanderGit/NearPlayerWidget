@@ -26,9 +26,12 @@
       "removePlayerText": {
         "name": "Entfernungsfilter"
       },
+      "removeNameColor": {
+        "name": "Entferne Namenfarbe"
+      },
       "header": {
-        "coloredDistanceSection": {
-          "name": "Farbige Distanz"
+        "color": {
+          "name": "Farbe"
         },
         "removePlayerSection": {
           "name": "Entferne Spieler"

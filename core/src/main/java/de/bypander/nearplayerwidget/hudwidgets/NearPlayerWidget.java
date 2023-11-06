@@ -21,6 +21,7 @@ import net.labymod.api.client.network.NetworkPlayerInfo;
 import net.labymod.api.client.resources.ResourceLocation;
 import net.labymod.api.util.Color;
 import net.labymod.api.util.I18n;
+import org.w3c.dom.Text;
 
 public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
@@ -31,7 +32,8 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
   public NearPlayerWidget(String id, NearPlayerModuleAddon addon) {
     super(id);
     this.config = addon.configuration();
-    this.setIcon(Icon.texture(ResourceLocation.create("nearplayerwidget", "textures/icon.png")).resolution(64,64));
+    this.setIcon(Icon.texture(ResourceLocation.create("nearplayerwidget", "textures/icon.png"))
+        .resolution(64, 64));
   }
 
   @Override
@@ -50,7 +52,7 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
     if (playerList.isEmpty()) {
       return Component.newline()
-          .append(Component.text(" "+ I18n.translate("nearplayerwidget.custom.noplayer.name")));
+          .append(Component.text(" " + I18n.translate("nearplayerwidget.custom.noplayer.name")));
     }
 
     int numberOfEntries = config.maxEntries().get();
@@ -59,11 +61,11 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
     for (int i = 0; i < Math.min(numberOfEntries, playerList.size()); i++) {
       RenderedPlayer rp = playerList.get(i);
-      String format = config.format().get().replaceAll("&([0-9a-f])", "§$1");
+      String format = config.format().get().replaceAll("&([0-9a-fk-or])", "§$1");
       String[] parts = format.split("\\{");
 
       textComponent.append(Component.newline()).append(Component.text(" "));
-
+      StringBuilder ifNoColor = new StringBuilder();
       for (String part : parts) {
         if (part.contains("}")) {
           String[] placeholders = part.split("\\}");
@@ -74,10 +76,18 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
           switch (placeholders[0]) {
             case "name":
-              textComponent.append(rp.name());
+              if (config.removeNameColor().get()) {
+                ifNoColor.append(rp.name().getText().replaceAll("§[0-9a-fk-or]", ""));
+              } else {
+                textComponent.append(rp.name());
+              }
               break;
             case "displayname":
-              textComponent.append(rp.displayName());
+              if (config.removeNameColor().get()) {
+                ifNoColor.append(getText(rp.displayName()).replaceAll("§[0-9a-fk-or]", ""));
+              } else {
+                textComponent.append(rp.displayName());
+              }
               break;
             case "distance":
               String distance = df.format(Math.sqrt(rp.squaredDistance()));
@@ -90,20 +100,37 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
                   }
                 }
               }
-              textComponent.append(Component.text(distance));
+              if (config.removeNameColor().get()) {
+                ifNoColor.append(distance);
+              } else {
+                textComponent.append(Component.text(distance));
+              }
               break;
             default:
-              textComponent.append(Component.text(placeholders[0]));
+              if (config.removeNameColor().get()) {
+                ifNoColor.append(placeholders[0]);
+              } else {
+                textComponent.append(Component.text(placeholders[0]));
+              }
               break;
           }
 
           if (placeholders.length > 1) {
-            textComponent.append(Component.text(placeholders[1]));
+            if (config.removeNameColor().get()) {
+              ifNoColor.append(placeholders[1]);
+            } else {
+              textComponent.append(Component.text(placeholders[1]));
+            }
           }
         } else {
-          textComponent.append(Component.text(part));
+          if (config.removeNameColor().get()) {
+            ifNoColor.append(part);
+          } else {
+            textComponent.append(Component.text(part));
+          }
         }
       }
+      textComponent.append(Component.text(ifNoColor.toString()));
     }
     return textComponent;
   }
@@ -118,22 +145,22 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
         assert clientplayer != null;
         if (!((Player) entity).getName().equals(clientplayer.getName())) {
           if (config.removePlayer().get()) {
-             for (String n : config.removePlayerText().get().split(";")) {
-               if (((Player) entity).getName().replaceAll("§", "").equals(n)) {
-                 continue outer;
-               }
-             }
+            for (String n : config.removePlayerText().get().split(";")) {
+              if (((Player) entity).getName().replaceAll("§", "").equals(n)) {
+                continue outer;
+              }
+            }
           }
           Double squaredDistance = entity.getDistanceSquared(clientplayer);
-          TextComponent name = Component.text(((Player) entity).getName());
-          TextComponent displayName = Component.text(((Player) entity).getName());
+          TextComponent name;
+          name = Component.text(((Player) entity).getName());
+          TextComponent displayName = name;
           NetworkPlayerInfo npi = ((Player) entity).networkPlayerInfo();
           if (npi != null) {
             if (npi.displayName() instanceof TextComponent) {
               displayName = (TextComponent) npi.displayName();
             }
           }
-
           playerList.add(
               new RenderedPlayer(name, displayName,
                   squaredDistance));
@@ -167,6 +194,16 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     }
     colors.sort(Comparator.comparingDouble(Colors::distance));
     return colors;
+  }
+
+  private String getText (TextComponent textComponent) {
+    StringBuilder sb = new StringBuilder().append(textComponent.getText());
+    for (Component component : textComponent.getChildren()) {
+      if (component instanceof TextComponent) {
+        sb.append(getText((TextComponent) component));
+      }
+    }
+    return sb.toString();
   }
 
   private record Colors(Integer distance, String color) {

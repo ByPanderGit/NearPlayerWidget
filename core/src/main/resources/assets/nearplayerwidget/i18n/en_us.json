@@ -26,9 +26,12 @@
       "removePlayerText": {
         "name": "Remove filter"
       },
+      "removeNameColor": {
+        "name": "Remove name color"
+      },
       "header": {
-        "coloredDistanceSection": {
-          "name": "Colored Distance"
+        "color": {
+          "name": "Color"
         },
         "removePlayerSection": {
           "name": "Remove Player"

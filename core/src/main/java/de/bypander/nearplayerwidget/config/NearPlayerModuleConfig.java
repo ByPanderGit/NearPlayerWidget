@@ -14,7 +14,7 @@ public class NearPlayerModuleConfig extends AddonConfig {
   private final ConfigProperty<Boolean> enabled = new ConfigProperty<>(true);
 
   @TextFieldSetting
-  private final ConfigProperty<String> format = new ConfigProperty<>("{name} {distance}m");
+  private final ConfigProperty<String> format = new ConfigProperty<>("{displayname} &7({distance}&7)");
 
   @SliderSetting(steps = 1, min = 1, max = 25)
   private final ConfigProperty<Integer> maxEntries = new ConfigProperty<>(10);
@@ -22,7 +22,10 @@ public class NearPlayerModuleConfig extends AddonConfig {
   @SliderSetting(steps = 1, min = 0, max = 5)
   private final ConfigProperty<Integer> maxDecimals = new ConfigProperty<>(2);
 
-  @SettingSection("coloredDistanceSection")
+  @SettingSection("color")
+  @SwitchSetting
+  private final ConfigProperty<Boolean> removeNameColor = new ConfigProperty<>(false);
+
   @SwitchSetting
   private final ConfigProperty<Boolean> coloredDistance = new ConfigProperty<>(true);
 
@@ -31,10 +34,10 @@ public class NearPlayerModuleConfig extends AddonConfig {
 
   @SettingSection("removePlayerSection")
   @SwitchSetting
-  private final ConfigProperty<Boolean> removePlayer = new ConfigProperty<>(true);
+  private final ConfigProperty<Boolean> removePlayer = new ConfigProperty<>(false);
 
   @TextFieldSetting
-  private final ConfigProperty<String> removePlayerText = new ConfigProperty<>("Playername1;Playername2");
+  private final ConfigProperty<String> removePlayerText = new ConfigProperty<>("Name1;Name2:Name3");
 
   public ConfigProperty<Boolean> removePlayer() {
     return removePlayer;
@@ -67,5 +70,9 @@ public class NearPlayerModuleConfig extends AddonConfig {
 
   public ConfigProperty<Integer> maxDecimals() {
     return maxDecimals;
+  }
+
+  public ConfigProperty<Boolean> removeNameColor() {
+    return removeNameColor;
   }
 }
