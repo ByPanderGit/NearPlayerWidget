@@ -1,7 +1,7 @@
 rootProject.name = "NearPlayerWidget"
 
 pluginManagement {
-    val labyGradlePluginVersion = "0.3.28"
+    val labyGradlePluginVersion = "0.4.0"
     plugins {
         id("net.labymod.gradle") version (labyGradlePluginVersion)
     }
