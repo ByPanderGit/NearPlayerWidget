@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import de.bypander.nearplayerwidget.NearPlayerModuleAddon;
 import de.bypander.nearplayerwidget.config.NearPlayerModuleConfig;
 import net.labymod.api.Laby;
-import net.labymod.api.addon.LabyAddon;
 import net.labymod.api.client.component.Component;
 import net.labymod.api.client.component.TextComponent;
 import net.labymod.api.client.entity.Entity;
@@ -19,9 +18,7 @@ import net.labymod.api.client.gui.hud.hudwidget.text.TextLine;
 import net.labymod.api.client.gui.icon.Icon;
 import net.labymod.api.client.network.NetworkPlayerInfo;
 import net.labymod.api.client.resources.ResourceLocation;
-import net.labymod.api.util.Color;
 import net.labymod.api.util.I18n;
-import org.w3c.dom.Text;
 
 public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 

@@ -6,7 +6,6 @@ import net.labymod.api.client.gui.screen.widget.widgets.input.SwitchWidget.Switc
 import net.labymod.api.client.gui.screen.widget.widgets.input.TextFieldWidget.TextFieldSetting;
 import net.labymod.api.configuration.loader.property.ConfigProperty;
 import net.labymod.api.configuration.settings.annotation.SettingSection;
-import net.labymod.api.util.MethodOrder;
 
 public class NearPlayerModuleConfig extends AddonConfig {
 
