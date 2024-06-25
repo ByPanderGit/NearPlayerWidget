@@ -1,22 +1,19 @@
 package de.bypander.nearplayerwidget.hudwidgets;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
+
 import de.bypander.nearplayerwidget.NearPlayerModuleAddon;
 import de.bypander.nearplayerwidget.config.NearPlayerModuleConfig;
 import net.labymod.api.Laby;
 import net.labymod.api.client.component.Component;
 import net.labymod.api.client.component.TextComponent;
-import net.labymod.api.client.entity.Entity;
 import net.labymod.api.client.entity.player.Player;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextHudWidget;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextHudWidgetConfig;
 import net.labymod.api.client.gui.hud.hudwidget.text.TextLine;
 import net.labymod.api.client.gui.icon.Icon;
-import net.labymod.api.client.network.NetworkPlayerInfo;
 import net.labymod.api.client.resources.ResourceLocation;
 import net.labymod.api.util.I18n;
 
@@ -30,11 +27,13 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     super(id);
     this.config = addon.configuration();
     this.setIcon(Icon.texture(ResourceLocation.create("nearplayerwidget", "textures/icon.png"))
-        .resolution(64, 64));
+      .resolution(64, 64));
   }
 
   @Override
   public void onTick(boolean isEditorContext) {
+    if (!isEnabled())
+      return;
     textLine.updateAndFlush(newTextComponent());
   }
 
@@ -45,127 +44,111 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
   }
 
   private TextComponent newTextComponent() {
-    ArrayList<RenderedPlayer> playerList = orderedPlayerList();
-
-    if (playerList.isEmpty()) {
+    Player clientPlayer = Laby.labyAPI().minecraft().getClientPlayer();
+    List<Player> playerList = Laby.labyAPI().minecraft().clientWorld().getPlayers();
+    if (playerList == null || playerList.isEmpty() || clientPlayer == null) {
       return Component.newline()
-          .append(Component.text(" " + I18n.translate("nearplayerwidget.custom.noplayer.name")));
+        .append(Component.text(" " + I18n.translate("nearplayerwidget.custom.noplayer.name")));
     }
+    List<Player> sortedList = new ArrayList<>(playerList);
+    sortedList.sort(Comparator.comparingDouble(p -> p.getDistanceSquared(clientPlayer)));
 
-    int numberOfEntries = config.maxEntries().get();
     DecimalFormat df = createDecimalFormatter();
     TextComponent textComponent = Component.empty();
+    List<String> format = format();
+    List<Colors> colors = new ArrayList<>();
+    if (config.coloredDistance().get())
+       colors = colorsList();
+    int added = 0;
 
-    for (int i = 0; i < Math.min(numberOfEntries, playerList.size()); i++) {
-      RenderedPlayer rp = playerList.get(i);
-      String format = config.format().get().replaceAll("&([0-9a-fk-or])", "§$1");
-      String[] parts = format.split("\\{");
+    String[] removePlayer = config.removePlayerText().get().split(";");
+    HashMap<String, String> map = new HashMap<>();
+    for (String s : removePlayer) {
+      map.put(s, null);
+    }
 
-      textComponent.append(Component.newline()).append(Component.text(" "));
-      StringBuilder ifNoColor = new StringBuilder();
-      for (String part : parts) {
-        if (part.contains("}")) {
-          String[] placeholders = part.split("\\}");
+    //loop through all rendered player until no player is left, or the maximum number of visible player in the widget is reached
+    for (Player p : sortedList) {
+      if (added >= config.maxEntries().get())
+        break;
 
-          if (placeholders.length == 0) {
-            continue;
-          }
+      if (p == null || p.getNetworkPlayerInfo() == null || p.getName() == clientPlayer.getName())
+        continue;
 
-          switch (placeholders[0]) {
-            case "name":
-              if (config.removeNameColor().get()) {
-                ifNoColor.append(rp.name().getText().replaceAll("§[0-9a-fk-or]", ""));
-              } else {
-                textComponent.append(rp.name());
-              }
-              break;
-            case "displayname":
-              if (config.removeNameColor().get()) {
-                ifNoColor.append(getText(rp.displayName()).replaceAll("§[0-9a-fk-or]", ""));
-              } else {
-                textComponent.append(rp.displayName());
-              }
-              break;
-            case "distance":
-              String distance = df.format(Math.sqrt(rp.squaredDistance()));
-              if (config.coloredDistance().get()) {
-                ArrayList<Colors> colors = colorsList();
-                for (Colors color : colors) {
-                  if (Math.sqrt(rp.squaredDistance()) < color.distance()) {
-                    distance = color.color() + distance + "§r";
-                    break;
-                  }
-                }
-              }
-              if (config.removeNameColor().get()) {
-                ifNoColor.append(distance);
-              } else {
-                textComponent.append(Component.text(distance));
-              }
-              break;
-            default:
-              if (config.removeNameColor().get()) {
-                ifNoColor.append(placeholders[0]);
-              } else {
-                textComponent.append(Component.text(placeholders[0]));
-              }
-              break;
-          }
+      if (config.removePlayer().get() && map.containsKey(p.getName().replace("§", "")))
+        continue;
 
-          if (placeholders.length > 1) {
+      //add the player in a new line
+      textComponent.append(Component.newline().append(Component.text(" ")));
+      StringBuilder sb = new StringBuilder();
+      outer:
+      for (String s : format) {
+        switch (s) {
+          case "§displayname":
             if (config.removeNameColor().get()) {
-              ifNoColor.append(placeholders[1]);
+              sb.append(getPlainText(p.getNetworkPlayerInfo().displayName()));
             } else {
-              textComponent.append(Component.text(placeholders[1]));
+              textComponent.append(p.getNetworkPlayerInfo().displayName());
             }
-          }
-        } else {
-          if (config.removeNameColor().get()) {
-            ifNoColor.append(part);
-          } else {
-            textComponent.append(Component.text(part));
-          }
+            break;
+          case "§name":
+            if (config.removeNameColor().get()) {
+              sb.append(p.getName().replaceAll("§[0-9a-fk-or]", ""));
+            } else {
+              textComponent.append(Component.text(p.getName()));
+            }
+            break;
+          case "§distance":
+            double distanceSquared = p.getDistanceSquared(clientPlayer);
+            double distance = Math.sqrt(distanceSquared);
+            String formattedDistance = df.format(distance);
+            if (!config.coloredDistance().get()) {
+              if (config.removeNameColor().get()) {
+                sb.append(formattedDistance);
+              } else {
+                textComponent.append(Component.text(formattedDistance));
+              }
+              continue;
+            }
+
+            for (Colors color : colors) {
+              if (distanceSquared < color.distanceSquared()) {
+                if (config.removeNameColor().get()) {
+                  sb.append(color.color + formattedDistance + "§r");
+                } else {
+                  textComponent.append(Component.text(color.color + formattedDistance + "§r"));
+                }
+                continue  outer;
+              }
+            }
+            if (config.removeNameColor().get()) {
+              sb.append(formattedDistance);
+            } else {
+              textComponent.append(Component.text(formattedDistance));
+            }
+            break;
+          default:
+            if (config.removeNameColor().get()) {
+              sb.append(s);
+            } else {
+              textComponent.append(Component.text(s));
+            }
         }
       }
-      textComponent.append(Component.text(ifNoColor.toString()));
+      added += 1;
+      textComponent.append(Component.text(sb.toString()));
     }
+    if (added == 0)
+      return Component.newline()
+        .append(Component.text(" " + I18n.translate("nearplayerwidget.custom.noplayer.name")));
     return textComponent;
   }
 
-  private ArrayList<RenderedPlayer> orderedPlayerList() {
-    Player clientplayer = Laby.labyAPI().minecraft().getClientPlayer();
-    List<Entity> entities = Laby.labyAPI().minecraft().clientWorld().getEntities();
-    ArrayList<RenderedPlayer> playerList = new ArrayList<>();
-    outer:
-    for (Entity entity : entities) {
-      if (entity instanceof Player) {
-        assert clientplayer != null;
-        if (!((Player) entity).getName().equals(clientplayer.getName())) {
-          if (config.removePlayer().get()) {
-            for (String n : config.removePlayerText().get().split(";")) {
-              if (((Player) entity).getName().replaceAll("§", "").equals(n)) {
-                continue outer;
-              }
-            }
-          }
-          Double squaredDistance = entity.getDistanceSquared(clientplayer);
-          TextComponent name;
-          name = Component.text(((Player) entity).getName());
-          TextComponent displayName = name;
-          NetworkPlayerInfo npi = ((Player) entity).networkPlayerInfo();
-          if (npi != null) {
-            if (npi.displayName() instanceof TextComponent) {
-              displayName = (TextComponent) npi.displayName();
-            }
-          }
-          playerList.add(
-              new RenderedPlayer(name, displayName,
-                  squaredDistance));
-        }
-      }
-    }
-    playerList.sort(Comparator.comparingDouble(RenderedPlayer::squaredDistance));
-    return playerList;
+  private List<String> format() {
+    String format = config.format().get().replaceAll("&([0-9a-fk-orA-FK-OR])", "§$1");
+    format = format.replaceAll("\\{(displayname|name|distance)\\}", "§ §$1§ ");
+    String[] front = format.split("§ ");
+    return Arrays.asList(front);
   }
 
   private DecimalFormat createDecimalFormatter() {
@@ -175,8 +158,8 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
     return new DecimalFormat("0");
   }
 
-  private ArrayList<Colors> colorsList() {
-    ArrayList<Colors> colors = new ArrayList<>();
+  private List<Colors> colorsList() {
+    List<Colors> colors = new ArrayList<>();
     String[] parts = config.coloredDistanceText().get().split(";");
     for (String part : parts) {
       String[] p = part.split(">");
@@ -185,30 +168,20 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
       }
       try {
         int d = Integer.parseInt(p[0]);
-        colors.add(new Colors(d, p[1].replace("&", "§")));
+        colors.add(new Colors(d * d, p[1].replace("&", "§")));
       } catch (NumberFormatException ignored) {
       }
     }
-    colors.sort(Comparator.comparingDouble(Colors::distance));
+    colors.sort(Comparator.comparingDouble(Colors::distanceSquared));
     return colors;
   }
 
-  private String getText (TextComponent textComponent) {
-    StringBuilder sb = new StringBuilder().append(textComponent.getText());
-    for (Component component : textComponent.getChildren()) {
-      if (component instanceof TextComponent) {
-        sb.append(getText((TextComponent) component));
-      }
-    }
-    return sb.toString();
+  private String getPlainText(Component textComponent) {
+    StringBuilder builder = new StringBuilder();
+    Laby.references().componentRenderer().getColorStrippingFlattener().flatten(textComponent, builder::append);
+    return builder.toString();
   }
 
-  private record Colors(Integer distance, String color) {
-
-  }
-
-  private record RenderedPlayer(TextComponent name, TextComponent displayName,
-                                Double squaredDistance) {
-
+  private record Colors(Integer distanceSquared, String color) {
   }
 }
