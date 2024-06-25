@@ -15,8 +15,7 @@ labyMod {
         namespace = "nearplayerwidget"
         displayName = "NearPlayerWidget"
         author = "ByPander"
-        description = "Adds a widget that displays nearby players.\n" +
-                "You can use {name}, {displayname} and {distance} to format the textlines."
+        description = "Adds a widget that displays nearby players."
         minecraftVersion = "*"
         version = System.getenv().getOrDefault("VERSION", "1.0.0")
     }
