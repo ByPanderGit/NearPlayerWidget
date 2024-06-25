@@ -23,11 +23,19 @@ public class NearPlayerWidget extends TextHudWidget<TextHudWidgetConfig> {
 
   private final NearPlayerModuleConfig config;
 
+  private final NearPlayerModuleAddon addon;
+
   public NearPlayerWidget(String id, NearPlayerModuleAddon addon) {
     super(id);
+    this.addon = addon;
     this.config = addon.configuration();
     this.setIcon(Icon.texture(ResourceLocation.create("nearplayerwidget", "textures/icon.png"))
       .resolution(64, 64));
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return addon.isAllowedOnServer() && super.isEnabled();
   }
 
   @Override
