@@ -13,7 +13,7 @@ public class NearPlayerModuleConfig extends AddonConfig {
   private final ConfigProperty<Boolean> enabled = new ConfigProperty<>(true);
 
   @TextFieldSetting
-  private final ConfigProperty<String> format = new ConfigProperty<>("{displayname} &7({distance}&7)");
+  private final ConfigProperty<String> format = new ConfigProperty<>("{displayname} &7({distance}&7m)");
 
   @SliderSetting(steps = 1, min = 1, max = 25)
   private final ConfigProperty<Integer> maxEntries = new ConfigProperty<>(10);
